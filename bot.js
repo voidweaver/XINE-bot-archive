@@ -74,10 +74,12 @@ function parseArgs(raw, prefix) {
 
     if (command.startsWith(prefix) || mentioned) {
         if (command.startsWith(prefix)) {
-            command_name = command.slice(prefix.length).toLowerCase()
+            command_name = command.slice(prefix.length)
         } else {
             command_name = command
         }
+
+        command_name = command_name.toLowerCase()
 
         if (command_name in SETTINGS.aliases) {
             command_name = SETTINGS.aliases[command_name]
