@@ -293,10 +293,9 @@ fs.readFile('./token', 'utf-8', (err, data) => {
     }
 
     let token_check = /[MN][A-Za-z\d]{23}\.[\w-]{6}\.[\w-]{27}/
-    let does_match = token.match(token_check)
 
-    if (err || !does_match) {
-        if (!does_match) {
+    if (err || !token.match(token_check)) {
+        if (!token.match(token_check)) {
             console.log('Token does not match regular expression /[MN][A-Za-z\\d]{23}\\.[\\w-]{6}\\.[\\w-]{27}/, prompting for token')
         }
 
