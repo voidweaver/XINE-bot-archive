@@ -303,6 +303,7 @@ fs.readFile('./token', 'utf-8', (err, data) => {
         let properties = [
             {
                 name: 'token',
+                hidden: true,
                 validator: token_check,
                 warning: 'Token must match regular expression /[MN][A-Za-z\\d]{23}\\.[\\w-]{6}\\.[\\w-]{27}/'
             }
