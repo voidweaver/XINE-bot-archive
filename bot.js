@@ -264,9 +264,9 @@ client.on('message', msg => {
                 let content = ''
                 let prefix = PREFS.user_preferences.prefix
                 for (alias in SETTINGS.aliases) {
-                    let alias = Helper.dCode(prefix + alias)
+                    let alias_name = Helper.dCode(prefix + alias)
                     let target = Helper.dCode(prefix + SETTINGS.aliases[alias])
-                    content += `${STR.display.alias.show.format(alias, target)}\n`
+                    content += `${STR.display.alias.show.format(alias_name, target)}\n`
                 }
                 sendEmbed(msg.channel, {
                     'title': STR.display.alias.show_title,
