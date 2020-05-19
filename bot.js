@@ -287,10 +287,36 @@ client.on('message', msg => {
 })
 
 fs.readFile('./token', 'utf-8', (err, data) => {
-    if (err) throw err
+    if (data) {
+        let newline_location = data.search('\n')
+        let token = data.slice(0, newline_location != -1 ? newline_location : undefined)
+    }
 
-    let newline_location = data.search('\n')
-    let token = data.slice(0, newline_location != -1 ? newline_location : undefined)
+    let token_check = /[MN][A-Za-z\d]{23}\.[\w-]{6}\.[\w-]{27}/
+    let does_match = token.match(token_check)
 
-    client.login(token);
+    if (err || !does_match) {
+        if (!does_match) {
+            console.log('Token does not match regular expression /[MN][A-Za-z\\d]{23}\\.[\\w-]{6}\\.[\\w-]{27}/, prompting for token')
+        }
+
+        let prompt = require('prompt')
+
+        let properties = [
+            {
+                name: 'token',
+                validator: token_check,
+                warning: 'Token must match regular expression /[MN][A-Za-z\\d]{23}\\.[\\w-]{6}\\.[\\w-]{27}/'
+            }
+        ];
+
+        prompt.start();
+
+        prompt.get(properties, function (err, result) {
+            if (err) { throw err }
+            client.login(result.token)
+        });
+    } else {
+        client.login(token);
+    }
 })
