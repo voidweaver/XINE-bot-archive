@@ -126,13 +126,13 @@ client.on('message', msg => {
     var PREFS = preferences_loader.get()
     if (PREFS === undefined) {
         preferences_loader.make({
-            'info': {
-                'is_dm': is_dm,
-                'guild_name': guild_name,
-                'channel_name': channel_name
+            info: {
+                is_dm: is_dm,
+                guild_name: guild_name,
+                channel_name: channel_name
             },
-            'user_preferences': {
-                'prefix': is_dm ? SETTINGS.defaults.dm_prefix : SETTINGS.defaults.prefix,
+            user_preferences: {
+                prefix: is_dm ? SETTINGS.defaults.dm_prefix : SETTINGS.defaults.prefix,
             }
         })
     } else {
@@ -150,7 +150,7 @@ client.on('message', msg => {
     switch (args[0]) {
         case 'ip':
             sendEmbed(msg.channel, {
-                'content': STR.display.ip.format(Helper.dCode(public_ip))
+                content: STR.display.ip.format(Helper.dCode(public_ip))
             })
             break
         case 'ping':
@@ -162,14 +162,17 @@ client.on('message', msg => {
             })
 
             sendEmbed(msg.channel, {
-                'content': STR.display.debug.reload
+                content: STR.display.debug.reload
             })
             break
         case 'parse':
             sendMsg(msg.channel, `[${args.join(', ')}]`)
             break
         case 'id':
-            sendMsg(msg.channel, STR.display.debug.id.format(Helper.dCode(id)))
+            sendEmbed(msg.channel, {
+                title: STR.display.debug.title,
+                content: STR.display.debug.id.format(Helper.dCode(id))
+            })
             break
         case 'preferences':
             {
@@ -193,8 +196,8 @@ client.on('message', msg => {
                 }
 
                 sendEmbed(msg.channel, {
-                    'title': STR.display.debug.pref_title,
-                    'content': Helper.dBlock(json_str, 'json')
+                    title: STR.display.debug.pref_title,
+                    content: Helper.dBlock(json_str, 'json')
                 })
             }
             break
@@ -205,17 +208,17 @@ client.on('message', msg => {
                 if (prefix || prefix == '') {
                     if (prefix == '' && !PREFS.info.is_dm) {
                         sendEmbed(msg.channel, {
-                            'title': STR.display.prefix.notdm_title,
-                            'content': STR.display.prefix.notdm_desc,
-                            'color': 'error'
+                            title: STR.display.prefix.notdm_title,
+                            content: STR.display.prefix.notdm_desc,
+                            color: 'error'
                         })
                         break
                     }
 
                     if (PREFS.user_preferences.prefix == prefix) {
                         sendEmbed(msg.channel, {
-                            'title': STR.display.prefix.default_title,
-                            'content': STR.display.prefix.unchanged.format(Helper.dPrefix(PREFS.user_preferences.prefix))
+                            title: STR.display.prefix.default_title,
+                            content: STR.display.prefix.unchanged.format(Helper.dPrefix(PREFS.user_preferences.prefix))
                         })
                         break
                     }
@@ -228,13 +231,13 @@ client.on('message', msg => {
                         info += `\n${STR.display.prefix.long_prefix_warning}`
                     }
                     sendEmbed(msg.channel, {
-                        'title': STR.display.prefix.default_title,
-                        'content': info
+                        title: STR.display.prefix.default_title,
+                        content: info
                     })
                 } else {
                     sendEmbed(msg.channel, {
-                        'title': STR.display.prefix.default_title,
-                        'content': STR.display.prefix.show.format(Helper.dPrefix(PREFS.user_preferences.prefix))
+                        title: STR.display.prefix.default_title,
+                        content: STR.display.prefix.show.format(Helper.dPrefix(PREFS.user_preferences.prefix))
                     })
                 }
             }
@@ -250,14 +253,14 @@ client.on('message', msg => {
                         content += `${Helper.dCode(prefix + command)}: ${help_texts[category][command]}\n`
                     }
                     fields.push({
-                        'name': category,
-                        'value': content
+                        name: category,
+                        value: content
                     })
                 }
                 sendEmbed(msg.channel, {
-                    'title': STR.display.help.title,
-                    'content': STR.display.help.header.format(Helper.dPrefix(PREFS.user_preferences.prefix)),
-                    'fields': fields
+                    title: STR.display.help.title,
+                    content: STR.display.help.header.format(Helper.dPrefix(PREFS.user_preferences.prefix)),
+                    fields: fields
                 })
             }
             break
@@ -271,16 +274,16 @@ client.on('message', msg => {
                     content += `${STR.display.alias.show.format(alias_name, target)}\n`
                 }
                 sendEmbed(msg.channel, {
-                    'title': STR.display.alias.show_title,
-                    'content': content
+                    title: STR.display.alias.show_title,
+                    content: content
                 })
             }
             break
         default:
             sendEmbed(msg.channel, {
-                'title': STR.display.not_found.title,
-                'content': STR.display.not_found.desc.format(Helper.dCode(args[0]), Helper.dCode(PREFS.user_preferences.prefix + 'help')),
-                'color': 'error'
+                title: STR.display.not_found.title,
+                content: STR.display.not_found.desc.format(Helper.dCode(args[0]), Helper.dCode(PREFS.user_preferences.prefix + 'help')),
+                color: 'error'
             })
             break
     }

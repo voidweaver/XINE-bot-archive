@@ -25,6 +25,7 @@
                 "show": "{} aliased to {}"
             },
             "debug": {
+                "title": "Debug info",
                 "reload": "Reloading settings",
                 "id": "This channel's ID is {}.",
                 "pref_title": "Channel preferences"
