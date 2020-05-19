@@ -1,0 +1,58 @@
+{
+    "en": {
+        "log": {
+            "active": "XINE started. Listening for messages.",
+            "ip_error": "Error getting IP: exited with status: {}"
+        },
+        "default": {
+            "embed_title": "XINE",
+            "embed_description": "No description provided"
+        },
+        "display": {
+            "ip": "Current IP is {}.",
+            "greet": "Hello there!",
+            "prefix": {
+                "default_title": "Prefix",
+                "notdm_title": "Error setting prefix",
+                "notdm_desc": "No prefix mode is only available in DMs.",
+                "unchanged": "The command prefix for this channel is already {}.",
+                "changed": "The command prefix for this channel is now {}.",
+                "long_prefix_warning": "**Note**: It is recommended that the prefix be a single character",
+                "show": "The command prefix for this channel is {}."
+            },
+            "alias": {
+                "show_title": "List of aliases",
+                "show": "{} aliased to {}"
+            },
+            "debug": {
+                "reload": "Reloading settings",
+                "id": "This channel's ID is {}.",
+                "pref_title": "Channel preferences"
+            },
+            "help": {
+                "title": "Commands help",
+                "header": "Here are the list of commands currently available. The current command prefix for this channel is {}.",
+                "entries": {
+                    "General": {
+                        "alias": "show command aliases",
+                        "ip": "shows the current ip",
+                        "noprefix": "set the prefix to blank (only available in DM channels)",
+                        "ping": "greet the bot",
+                        "prefix": "set prefix"
+                    },
+                    "Debug": {
+                        "reload": "reload bot settings (dev)",
+                        "parse": "parse arguments given",
+                        "id": "get channel id",
+                        "preferences": "display the preferences of this channel in JSON format",
+                        "help": "show this help text"
+                    }
+                }
+            },
+            "not_found": {
+                "title": "Error",
+                "desc": "Command {} not found, try {}."
+            }
+        }
+    }
+}

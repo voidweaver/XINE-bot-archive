@@ -1,0 +1,20 @@
+{
+    "aliases": {
+        "": "help",
+        "?": "help",
+        "aliases": "alias",
+        "hello": "ping",
+        "hello!": "ping",
+        "prefs": "preferences"
+    },
+    "colors": {
+        "error": "#ff0000",
+        "default": "#ffffff"
+    },
+    "defaults": {
+        "prefix": "%",
+        "dm_prefix": "",
+        "ip_interval": 60000
+    },
+    "indent_size": 4
+}
