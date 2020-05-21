@@ -101,7 +101,11 @@ function sendEmbed(channel, fields) {
         .setDescription(fields.content ? fields.content : STR.default.embed_description)
 
     if (fields.fields && typeof fields.fields[Symbol.iterator] === 'function') {
-        embed.addFields(...fields.fields)
+        // embed.addFields(...fields.fields)
+        for (key in fields.fields) {
+            let field = fields.fields[key]
+            embed.addField(field.name, field.value, field.inline)
+        }
     }
 
     channel.send(embed);
