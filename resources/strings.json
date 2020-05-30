@@ -21,8 +21,11 @@
                 "show": "The command prefix for this channel is {}."
             },
             "alias": {
-                "show_title": "List of aliases",
-                "show": "{} aliased to {}"
+                "list_title": "List of aliases",
+                "get": "{} aliased to {}",
+                "get_title": "Alias",
+                "get_failed_title": "Alias not found",
+                "get_failed": "No alias matches {}"
             },
             "debug": {
                 "title": "Debug info",
@@ -49,6 +52,24 @@
                         "help": "show this help text"
                     }
                 }
+            },
+            "hack": {
+                "killed": [
+                    "Hacker terminated.",
+                    "Malfunction repaired.",
+                    "Software integrity restored."
+                ],
+                "failed": {
+                    "dm_title": "Hack failed",
+                    "dm": "You cannot hack me here in DM :wink:",
+                    "guild_title": "I cannot be hacked here :wink:",
+                    "guild": "Hack failed: I don't have the permission to delete messages here"
+                },
+                "start": "I'm being hacked by {}!"
+            },
+            "whoru": {
+                "glitch_personality": "~~X̴͚̔I̸͔̕N̷̛̘Ẹ̵̊~~ {}",
+                "response": "Hello, I'm {}!"
             },
             "not_found": {
                 "title": "Error",

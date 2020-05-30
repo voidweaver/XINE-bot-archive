@@ -1,8 +1,6 @@
-const crypto = require('crypto')
 const Discord = require('discord.js')
 const format = require('string-format')
 const fs = require('fs')
-const path = require('path')
 
 format.extend(String.prototype, {})
 
@@ -16,6 +14,7 @@ const {
     PreferencesLoader,
     ResourceLoader
 } = require('./loader')
+var tasks = {}
 
 var ip_updater;
 
@@ -107,10 +106,16 @@ function sendEmbed(channel, fields) {
     channel.send(embed);
 }
 
-function sendMsg(channel, msg, escape) {
-    if (escape === undefined) escape = true // Defaults to true
+function countLeading(str, lead = ' ') {
+    for (let i = 0; i < str.length; i++) {
+        if (str[i] != lead) return i
+    }
+    return str.length - 1
+}
+
+function sendMsg(channel, msg, escape = true) {
     if (escape) msg = Helper.dEscape(msg)
-    channel.send(msg)
+    return channel.send(msg)
 }
 
 client.on('message', msg => {
@@ -144,6 +149,37 @@ client.on('message', msg => {
     PREFS = preferences_loader.get()
 
     let args = parseArgs(msg.content, PREFS.user_preferences.prefix)
+
+    async function on_kill(channel) {
+        for (text of STR.display.hack.killed) {
+            await sendMsg(channel, text)
+        }
+    }
+
+    if (msg.channel.id in tasks) {
+        let task = tasks[msg.channel.id]
+        switch (task._task_name) {
+            case 'hacked':
+                if (msg.author.id == task.hacker.id) {
+                    switch (args[0]) {
+                        case 'kill':
+                        case 'terminate':
+                        case 'stop':
+                        case 'logout':
+                            delete tasks[msg.channel.id]
+                            on_kill(msg.channel)
+                            return
+                        default:
+                            sendMsg(msg.channel, msg.content, false)
+                            if (msg.guild && msg.guild.me.hasPermission(Discord.Permissions.FLAGS.MANAGE_MESSAGES)) {
+                                msg.delete()
+                            }
+                            return
+                    }
+                }
+                break
+        }
+    }
 
     if (!args[0]) return
 
@@ -265,18 +301,93 @@ client.on('message', msg => {
             }
             break
         case 'alias':
-            {
+            if (args[1]) {
+                if (args[1] in SETTINGS.aliases) {
+                    let prefix = PREFS.user_preferences.prefix
+                    let alias_name = Helper.dCode(prefix + args[1])
+                    let target = Helper.dCode(prefix + SETTINGS.aliases[args[1]])
+                    sendEmbed(msg.channel, {
+                        title: STR.display.alias.get_title,
+                        content: STR.display.alias.get.format(alias_name, target)
+                    })
+                } else {
+                    sendEmbed(msg.channel, {
+                        title: STR.display.alias.get_failed_title,
+                        content: STR.display.alias.get_failed.format(args[1]),
+                        color: 'error'
+                    })
+                }
+            } else {
                 let content = ''
                 let prefix = PREFS.user_preferences.prefix
                 for (alias in SETTINGS.aliases) {
                     let alias_name = Helper.dCode(prefix + alias)
                     let target = Helper.dCode(prefix + SETTINGS.aliases[alias])
-                    content += `${STR.display.alias.show.format(alias_name, target)}\n`
+                    content += `${STR.display.alias.get.format(alias_name, target)}\n`
                 }
                 sendEmbed(msg.channel, {
-                    title: STR.display.alias.show_title,
+                    title: STR.display.alias.list_title,
                     content: content
                 })
+            }
+            break
+        case 'say':
+            {
+                let trimmed = msg.content.trim()
+                let prefix_end = PREFS.user_preferences.prefix.length
+                let prefix_separator_count = countLeading(trimmed.substring(prefix_end))
+                let cmd_start = prefix_end + prefix_separator_count
+                let cmd_end = cmd_start + args[0].length
+                let msg_start = cmd_end + countLeading(msg.content.substring(cmd_end))
+
+                sendMsg(msg.channel, msg.content.substring(msg_start), false)
+                if (!PREFS.info.is_dm && msg.guild) {
+                    if (msg.guild.me.hasPermission(Discord.Permissions.FLAGS.MANAGE_MESSAGES)) {
+                        msg.delete()
+                    }
+                }
+            }
+            break
+        case 'hack':
+            if (PREFS.info.is_dm) {
+                sendEmbed(msg.channel, {
+                    title: STR.display.hack.failed.dm_title,
+                    content: STR.display.hack.failed.dm,
+                    color: 'error'
+                })
+            } else {
+                if (msg.guild) {
+                    if (msg.guild.me.hasPermission(Discord.Permissions.FLAGS.MANAGE_MESSAGES)) {
+                        tasks[msg.channel.id] = {
+                            _task_name: 'hacked',
+                            hacker: msg.author
+                        }
+                        msg.delete()
+                        sendMsg(msg.channel, STR.display.hack.start.format(msg.author), false).then(msg_sent => {
+                            setTimeout(_ => {
+                                msg_sent.delete()
+                            }, 10000)
+                        })
+                    } else {
+                        sendEmbed(msg.channel, {
+                            title: STR.display.hack.failed.guild_title,
+                            content: STR.display.hack.failed.guild,
+                            color: 'error'
+                        })
+                    }
+                }
+            }
+            break
+        case 'whoareyou':
+            {
+                let personality = client.user.toString()
+                if (msg.channel.id in tasks) {
+                    let task = tasks[msg.channel.id]
+                    if (task._task_name == 'hacked') {
+                        personality = STR.display.whoru.glitch_personality.format(task.hacker)
+                    }
+                }
+                sendMsg(msg.channel, STR.display.whoru.response.format(personality), false)
             }
             break
         default:

@@ -2,10 +2,13 @@
     "aliases": {
         "": "help",
         "?": "help",
-        "aliases": "alias",
         "hello": "ping",
         "hello!": "ping",
-        "prefs": "preferences"
+        "hi": "ping",
+        "hi!": "ping",
+        "impersonate": "hack",
+        "prefs": "preferences",
+        "whoru": "whoareyou"
     },
     "colors": {
         "error": "#ff0000",
