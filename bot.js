@@ -1,134 +1,139 @@
-const Discord = require('discord.js')
-const format = require('string-format')
-const fs = require('fs')
+const Discord = require("discord.js");
+const format = require("string-format");
+const fs = require("fs");
 
-format.extend(String.prototype, {})
+format.extend(String.prototype, {});
 
-const {
-    exec
-} = require('child_process')
+const {exec} = require("child_process");
 
-const Helper = require('./helper')
-const {
-    SettingsLoader,
-    PreferencesLoader,
-    ResourceLoader
-} = require('./loader')
-var tasks = {}
+const Helper = require("./helper");
+const {SettingsLoader, PreferencesLoader, ResourceLoader} = require("./loader");
+var tasks = {};
 
 var ip_updater;
 
 var public_ip;
-const settings_loader = new SettingsLoader('./settings.json')
-var SETTINGS = settings_loader.get()
-const str_loader = new ResourceLoader('./resources/strings.json')
-var STR = str_loader.get()['en']
+const settings_loader = new SettingsLoader("./settings.json");
+var SETTINGS = settings_loader.get();
+const str_loader = new ResourceLoader("./resources/strings.json");
+var STR = str_loader.get()["en"];
 
 const client = new Discord.Client();
 
-client.once('ready', () => {
-    checkForIP()
-    console.log(STR.log.active)
-})
+client.once("ready", () => {
+    checkForIP();
+    console.log(STR.log.active);
+});
 
 const updateIP = () => {
-    exec('dig +tries=1 +short -4 A myip.opendns.com @resolver1.opendns.com', (err, stdout, stderr) => {
-        if (err) {
-            console.error(STR.log.ip_error.format(err))
-        } else {
-            public_ip = stdout.charAt(stdout.length - 1) == '\n' ? stdout.slice(0, -1) : stdout
+    exec(
+        "dig +tries=1 +short -4 A myip.opendns.com @resolver1.opendns.com",
+        (err, stdout, stderr) => {
+            if (err) {
+                console.error(STR.log.ip_error.format(err));
+            } else {
+                public_ip =
+                    stdout.charAt(stdout.length - 1) == "\n"
+                        ? stdout.slice(0, -1)
+                        : stdout;
+            }
         }
-    })
-}
+    );
+};
 
 function checkForIP(ms) {
-    clearInterval(ip_updater)
-    updateIP()
-    ip_updater = setInterval(updateIP, isNaN(ms) ? SETTINGS.defaults.ip_interval : ms)
+    clearInterval(ip_updater);
+    updateIP();
+    ip_updater = setInterval(
+        updateIP,
+        isNaN(ms) ? SETTINGS.defaults.ip_interval : ms
+    );
 }
 
 function parseArgs(raw, prefix) {
-    let tokens = raw.split(' ').filter(el => {
-        return el != ''
-    })
-    if (tokens.length == 0) return [null]
+    let tokens = raw.split(" ").filter(el => {
+        return el != "";
+    });
+    if (tokens.length == 0) return [null];
 
-    let command = tokens.shift()
+    let command = tokens.shift();
     if (command == prefix && tokens.length > 0) {
-        command += tokens.shift()
+        command += tokens.shift();
     }
 
-    let mentioned = false
+    let mentioned = false;
 
-    let mention_test = new RegExp('<@!?' + client.user.id + '>')
+    let mention_test = new RegExp("<@!?" + client.user.id + ">");
 
     while (command && command.match(mention_test)) {
-        mentioned = true
-        command = tokens.shift()
+        mentioned = true;
+        command = tokens.shift();
     }
 
-    if (!command) command = ''
+    if (!command) command = "";
 
-    let command_name = null
+    let command_name = null;
 
     if (command.startsWith(prefix) || mentioned) {
         if (command.startsWith(prefix)) {
-            command_name = command.slice(prefix.length)
+            command_name = command.slice(prefix.length);
         } else {
-            command_name = command
+            command_name = command;
         }
 
-        command_name = command_name.toLowerCase()
+        command_name = command_name.toLowerCase();
 
         if (command_name in SETTINGS.aliases) {
-            command_name = SETTINGS.aliases[command_name]
+            command_name = SETTINGS.aliases[command_name];
         }
     }
 
-    return [command_name].concat(tokens)
+    return [command_name].concat(tokens);
 }
 
 function sendEmbed(channel, fields) {
     let escape = fields.escape;
-    if (escape) fields.content = Helper.dEscape(fields.content)
+    if (escape) fields.content = Helper.dEscape(fields.content);
 
-    let color = fields.color
-    color = color ? color : 'default'
+    let color = fields.color;
+    color = color ? color : "default";
     let embed = new Discord.MessageEmbed()
         .setColor(SETTINGS.colors[color])
         .setTitle(fields.title ? fields.title : STR.default.embed_title)
-        .setDescription(fields.content ? fields.content : STR.default.embed_description)
+        .setDescription(
+            fields.content ? fields.content : STR.default.embed_description
+        );
 
-    if (fields.fields && typeof fields.fields[Symbol.iterator] === 'function') {
-        embed.addFields(...fields.fields)
+    if (fields.fields && typeof fields.fields[Symbol.iterator] === "function") {
+        embed.addFields(...fields.fields);
     }
 
     channel.send(embed);
 }
 
-function countLeading(str, lead = ' ') {
+function countLeading(str, lead = " ") {
     for (let i = 0; i < str.length; i++) {
-        if (str[i] != lead) return i
+        if (str[i] != lead) return i;
     }
-    return str.length - 1
+    return str.length - 1;
 }
 
 function sendMsg(channel, msg, escape = true) {
-    if (escape) msg = Helper.dEscape(msg)
-    return channel.send(msg)
+    if (escape) msg = Helper.dEscape(msg);
+    return channel.send(msg);
 }
 
-client.on('message', msg => {
-    if (msg.author == client.user) return
+client.on("message", msg => {
+    if (msg.author == client.user) return;
 
-    let id = msg.channel.id
-    let is_dm = msg.guild === null ? 1 : 0
-    let guild_name = is_dm ? null : msg.channel.guild.name
-    let channel_name = is_dm ? msg.author.tag : msg.channel.name
+    let id = msg.channel.id;
+    let is_dm = msg.guild === null ? 1 : 0;
+    let guild_name = is_dm ? null : msg.channel.guild.name;
+    let channel_name = is_dm ? msg.author.tag : msg.channel.name;
 
-    var preferences_loader = new PreferencesLoader('./guild_preferences', id)
+    var preferences_loader = new PreferencesLoader("./guild_preferences", id);
 
-    var PREFS = preferences_loader.get()
+    var PREFS = preferences_loader.get();
     if (PREFS === undefined) {
         preferences_loader.make({
             info: {
@@ -137,299 +142,364 @@ client.on('message', msg => {
                 channel_name: channel_name
             },
             user_preferences: {
-                prefix: is_dm ? SETTINGS.defaults.dm_prefix : SETTINGS.defaults.prefix,
+                prefix: is_dm
+                    ? SETTINGS.defaults.dm_prefix
+                    : SETTINGS.defaults.prefix
             }
-        })
+        });
     } else {
-        PREFS.info.guild_name = guild_name
-        PREFS.info.channel_name = channel_name
-        preferences_loader.save()
+        PREFS.info.guild_name = guild_name;
+        PREFS.info.channel_name = channel_name;
+        preferences_loader.save();
     }
 
-    PREFS = preferences_loader.get()
+    PREFS = preferences_loader.get();
 
-    let args = parseArgs(msg.content, PREFS.user_preferences.prefix)
+    let args = parseArgs(msg.content, PREFS.user_preferences.prefix);
 
     async function on_kill(channel) {
         for (text of STR.display.hack.killed) {
-            await sendMsg(channel, text)
+            await sendMsg(channel, text);
         }
     }
 
     if (msg.channel.id in tasks) {
-        let task = tasks[msg.channel.id]
+        let task = tasks[msg.channel.id];
         switch (task._task_name) {
-            case 'hacked':
+            case "hacked":
                 if (msg.author.id == task.hacker.id) {
                     switch (args[0]) {
-                        case 'kill':
-                        case 'terminate':
-                        case 'stop':
-                        case 'logout':
-                            delete tasks[msg.channel.id]
-                            on_kill(msg.channel)
-                            return
+                        case "kill":
+                        case "terminate":
+                        case "stop":
+                        case "logout":
+                            delete tasks[msg.channel.id];
+                            on_kill(msg.channel);
+                            return;
                         default:
-                            sendMsg(msg.channel, msg.content, false)
-                            if (msg.guild && msg.guild.me.hasPermission(Discord.Permissions.FLAGS.MANAGE_MESSAGES)) {
-                                msg.delete()
+                            sendMsg(msg.channel, msg.content, false);
+                            if (
+                                msg.guild &&
+                                msg.guild.me.hasPermission(
+                                    Discord.Permissions.FLAGS.MANAGE_MESSAGES
+                                )
+                            ) {
+                                msg.delete();
                             }
-                            return
+                            return;
                     }
                 }
-                break
+                break;
         }
     }
 
-    if (!args[0]) return
+    if (!args[0]) return;
 
     switch (args[0]) {
-        case 'ip':
+        case "ip":
             sendEmbed(msg.channel, {
                 content: STR.display.ip.format(Helper.dCode(public_ip))
-            })
-            break
-        case 'ping':
-            sendMsg(msg.channel, STR.display.greet)
-            break
-        case 'reload':
+            });
+            break;
+        case "ping":
+            sendMsg(msg.channel, STR.display.greet);
+            break;
+        case "reload":
             settings_loader.reload().then(() => {
-                SETTINGS = settings_loader.get()
-            })
+                SETTINGS = settings_loader.get();
+            });
 
             sendEmbed(msg.channel, {
                 content: STR.display.debug.reload
-            })
-            break
-        case 'parse':
-            sendMsg(msg.channel, `[${args.join(', ')}]`)
-            break
-        case 'id':
+            });
+            break;
+        case "parse":
+            sendMsg(msg.channel, `[${args.join(", ")}]`);
+            break;
+        case "id":
             sendEmbed(msg.channel, {
                 title: STR.display.debug.title,
                 content: STR.display.debug.id.format(Helper.dCode(id))
-            })
-            break
-        case 'preferences':
+            });
+            break;
+        case "preferences":
             {
-                let all = false
+                let all = false;
                 for (let arg of args.slice(1)) {
-                    if (arg == '-a' || arg == '--all') {
-                        all = true
-                        break
+                    if (arg == "-a" || arg == "--all") {
+                        all = true;
+                        break;
                     }
                 }
 
-                let json_str
+                let json_str;
 
                 if (all) {
-                    json_str = Helper.sortedStringify(PREFS, undefined, SETTINGS.indent_size)
+                    json_str = Helper.sortedStringify(
+                        PREFS,
+                        undefined,
+                        SETTINGS.indent_size
+                    );
                 } else {
-                    json_str = Helper.sortedStringify(PREFS.user_preferences, undefined, SETTINGS.indent_size)
-                    let tab = ' '.repeat(SETTINGS.indent_size)
-                    json_str = json_str.replace(/\n/g, `\n${tab}`)
-                    json_str = `{\n${tab}"user_preferences": ${json_str}\n}`
+                    json_str = Helper.sortedStringify(
+                        PREFS.user_preferences,
+                        undefined,
+                        SETTINGS.indent_size
+                    );
+                    let tab = " ".repeat(SETTINGS.indent_size);
+                    json_str = json_str.replace(/\n/g, `\n${tab}`);
+                    json_str = `{\n${tab}"user_preferences": ${json_str}\n}`;
                 }
 
                 sendEmbed(msg.channel, {
                     title: STR.display.debug.pref_title,
-                    content: Helper.dBlock(json_str, 'json')
-                })
+                    content: Helper.dBlock(json_str, "json")
+                });
             }
-            break
-        case 'noprefix':
-        case 'prefix':
+            break;
+        case "noprefix":
+        case "prefix":
             {
-                let prefix = args[0] == 'noprefix' ? '' : args[1]
-                if (prefix || prefix == '') {
-                    if (prefix == '' && !PREFS.info.is_dm) {
+                let prefix = args[0] == "noprefix" ? "" : args[1];
+                if (prefix || prefix == "") {
+                    if (prefix == "" && !PREFS.info.is_dm) {
                         sendEmbed(msg.channel, {
                             title: STR.display.prefix.notdm_title,
                             content: STR.display.prefix.notdm_desc,
-                            color: 'error'
-                        })
-                        break
+                            color: "error"
+                        });
+                        break;
                     }
 
                     if (PREFS.user_preferences.prefix == prefix) {
                         sendEmbed(msg.channel, {
                             title: STR.display.prefix.default_title,
-                            content: STR.display.prefix.unchanged.format(Helper.dPrefix(PREFS.user_preferences.prefix))
-                        })
-                        break
+                            content: STR.display.prefix.unchanged.format(
+                                Helper.dPrefix(PREFS.user_preferences.prefix)
+                            )
+                        });
+                        break;
                     }
 
-                    PREFS.user_preferences.prefix = prefix
-                    preferences_loader.save()
+                    PREFS.user_preferences.prefix = prefix;
+                    preferences_loader.save();
 
-                    let info = STR.display.prefix.changed.format(Helper.dPrefix(PREFS.user_preferences.prefix))
+                    let info = STR.display.prefix.changed.format(
+                        Helper.dPrefix(PREFS.user_preferences.prefix)
+                    );
                     if (PREFS.user_preferences.prefix.length > 1) {
-                        info += `\n${STR.display.prefix.long_prefix_warning}`
+                        info += `\n${STR.display.prefix.long_prefix_warning}`;
                     }
                     sendEmbed(msg.channel, {
                         title: STR.display.prefix.default_title,
                         content: info
-                    })
+                    });
                 } else {
                     sendEmbed(msg.channel, {
                         title: STR.display.prefix.default_title,
-                        content: STR.display.prefix.show.format(Helper.dPrefix(PREFS.user_preferences.prefix))
-                    })
+                        content: STR.display.prefix.show.format(
+                            Helper.dPrefix(PREFS.user_preferences.prefix)
+                        )
+                    });
                 }
             }
-            break
-        case 'help':
+            break;
+        case "help":
             {
-                let fields = []
-                let prefix = PREFS.user_preferences.prefix
-                let help_texts = STR.display.help.entries
+                let fields = [];
+                let prefix = PREFS.user_preferences.prefix;
+                let help_texts = STR.display.help.entries;
                 for (let category in help_texts) {
-                    let content = ''
+                    let content = "";
                     for (let command in help_texts[category]) {
-                        content += `${Helper.dCode(prefix + command)}: ${help_texts[category][command]}\n`
+                        content += `${Helper.dCode(prefix + command)}: ${
+                            help_texts[category][command]
+                        }\n`;
                     }
                     fields.push({
                         name: category,
                         value: content
-                    })
+                    });
                 }
                 sendEmbed(msg.channel, {
                     title: STR.display.help.title,
-                    content: STR.display.help.header.format(Helper.dPrefix(PREFS.user_preferences.prefix)),
+                    content: STR.display.help.header.format(
+                        Helper.dPrefix(PREFS.user_preferences.prefix)
+                    ),
                     fields: fields
-                })
+                });
             }
-            break
-        case 'alias':
+            break;
+        case "alias":
             if (args[1]) {
                 if (args[1] in SETTINGS.aliases) {
-                    let prefix = PREFS.user_preferences.prefix
-                    let alias_name = Helper.dCode(prefix + args[1])
-                    let target = Helper.dCode(prefix + SETTINGS.aliases[args[1]])
+                    let prefix = PREFS.user_preferences.prefix;
+                    let alias_name = Helper.dCode(prefix + args[1]);
+                    let target = Helper.dCode(
+                        prefix + SETTINGS.aliases[args[1]]
+                    );
                     sendEmbed(msg.channel, {
                         title: STR.display.alias.get_title,
-                        content: STR.display.alias.get.format(alias_name, target)
-                    })
+                        content: STR.display.alias.get.format(
+                            alias_name,
+                            target
+                        )
+                    });
                 } else {
                     sendEmbed(msg.channel, {
                         title: STR.display.alias.get_failed_title,
                         content: STR.display.alias.get_failed.format(args[1]),
-                        color: 'error'
-                    })
+                        color: "error"
+                    });
                 }
             } else {
-                let content = ''
-                let prefix = PREFS.user_preferences.prefix
+                let content = "";
+                let prefix = PREFS.user_preferences.prefix;
                 for (alias in SETTINGS.aliases) {
-                    let alias_name = Helper.dCode(prefix + alias)
-                    let target = Helper.dCode(prefix + SETTINGS.aliases[alias])
-                    content += `${STR.display.alias.get.format(alias_name, target)}\n`
+                    let alias_name = Helper.dCode(prefix + alias);
+                    let target = Helper.dCode(prefix + SETTINGS.aliases[alias]);
+                    content += `${STR.display.alias.get.format(
+                        alias_name,
+                        target
+                    )}\n`;
                 }
                 sendEmbed(msg.channel, {
                     title: STR.display.alias.list_title,
                     content: content
-                })
+                });
             }
-            break
-        case 'say':
+            break;
+        case "say":
             {
-                let trimmed = msg.content.trim()
-                let prefix_end = PREFS.user_preferences.prefix.length
-                let prefix_separator_count = countLeading(trimmed.substring(prefix_end))
-                let cmd_start = prefix_end + prefix_separator_count
-                let cmd_end = cmd_start + args[0].length
-                let msg_start = cmd_end + countLeading(msg.content.substring(cmd_end))
+                let trimmed = msg.content.trim();
+                let prefix_end = PREFS.user_preferences.prefix.length;
+                let prefix_separator_count = countLeading(
+                    trimmed.substring(prefix_end)
+                );
+                let cmd_start = prefix_end + prefix_separator_count;
+                let cmd_end = cmd_start + args[0].length;
+                let msg_start =
+                    cmd_end + countLeading(msg.content.substring(cmd_end));
 
-                sendMsg(msg.channel, msg.content.substring(msg_start), false)
+                sendMsg(msg.channel, msg.content.substring(msg_start), false);
                 if (!PREFS.info.is_dm && msg.guild) {
-                    if (msg.guild.me.hasPermission(Discord.Permissions.FLAGS.MANAGE_MESSAGES)) {
-                        msg.delete()
+                    if (
+                        msg.guild.me.hasPermission(
+                            Discord.Permissions.FLAGS.MANAGE_MESSAGES
+                        )
+                    ) {
+                        msg.delete();
                     }
                 }
             }
-            break
-        case 'hack':
+            break;
+        case "hack":
             if (PREFS.info.is_dm) {
                 sendEmbed(msg.channel, {
                     title: STR.display.hack.failed.dm_title,
                     content: STR.display.hack.failed.dm,
-                    color: 'error'
-                })
+                    color: "error"
+                });
             } else {
                 if (msg.guild) {
-                    if (msg.guild.me.hasPermission(Discord.Permissions.FLAGS.MANAGE_MESSAGES)) {
+                    if (
+                        msg.guild.me.hasPermission(
+                            Discord.Permissions.FLAGS.MANAGE_MESSAGES
+                        )
+                    ) {
                         tasks[msg.channel.id] = {
-                            _task_name: 'hacked',
+                            _task_name: "hacked",
                             hacker: msg.author
-                        }
-                        msg.delete()
-                        sendMsg(msg.channel, STR.display.hack.start.format(msg.author), false).then(msg_sent => {
+                        };
+                        msg.delete();
+                        sendMsg(
+                            msg.channel,
+                            STR.display.hack.start.format(msg.author),
+                            false
+                        ).then(msg_sent => {
                             setTimeout(_ => {
-                                msg_sent.delete()
-                            }, 10000)
-                        })
+                                msg_sent.delete();
+                            }, 10000);
+                        });
                     } else {
                         sendEmbed(msg.channel, {
                             title: STR.display.hack.failed.guild_title,
                             content: STR.display.hack.failed.guild,
-                            color: 'error'
-                        })
+                            color: "error"
+                        });
                     }
                 }
             }
-            break
-        case 'whoareyou':
+            break;
+        case "whoareyou":
             {
-                let personality = client.user.toString()
+                let personality = client.user.toString();
                 if (msg.channel.id in tasks) {
-                    let task = tasks[msg.channel.id]
-                    if (task._task_name == 'hacked') {
-                        personality = STR.display.whoru.glitch_personality.format(task.hacker)
+                    let task = tasks[msg.channel.id];
+                    if (task._task_name == "hacked") {
+                        personality = STR.display.whoru.glitch_personality.format(
+                            task.hacker
+                        );
                     }
                 }
-                sendMsg(msg.channel, STR.display.whoru.response.format(personality), false)
+                sendMsg(
+                    msg.channel,
+                    STR.display.whoru.response.format(personality),
+                    false
+                );
             }
-            break
+            break;
         default:
             sendEmbed(msg.channel, {
                 title: STR.display.not_found.title,
-                content: STR.display.not_found.desc.format(Helper.dCode(args[0]), Helper.dCode(PREFS.user_preferences.prefix + 'help')),
-                color: 'error'
-            })
-            break
+                content: STR.display.not_found.desc.format(
+                    Helper.dCode(args[0]),
+                    Helper.dCode(PREFS.user_preferences.prefix + "help")
+                ),
+                color: "error"
+            });
+            break;
     }
-})
+});
 
-fs.readFile('./token', 'utf-8', (err, data) => {
-    let token
+fs.readFile("./token", "utf-8", (err, data) => {
+    let token;
     if (data) {
-        let newline_location = data.search('\n')
-        token = data.slice(0, newline_location != -1 ? newline_location : undefined)
+        let newline_location = data.search("\n");
+        token = data.slice(
+            0,
+            newline_location != -1 ? newline_location : undefined
+        );
     }
 
-    let token_check = /[MN][A-Za-z\d]{23}\.[\w-]{6}\.[\w-]{27}/
+    let token_check = /[MN][A-Za-z\d]{23}\.[\w-]{6}\.[\w-]{27}/;
 
     if (err || !token.match(token_check)) {
-        console.log('Token does not match regular expression /[MN][A-Za-z\\d]{23}\\.[\\w-]{6}\\.[\\w-]{27}/, prompting for token')
+        console.log(
+            "Token does not match regular expression /[MN][A-Za-z\\d]{23}\\.[\\w-]{6}\\.[\\w-]{27}/, prompting for token"
+        );
 
-        let prompt = require('prompt')
+        let prompt = require("prompt");
 
         let properties = [
             {
-                name: 'token',
+                name: "token",
                 hidden: true,
                 validator: token_check,
-                warning: 'Token must match regular expression /[MN][A-Za-z\\d]{23}\\.[\\w-]{6}\\.[\\w-]{27}/'
+                warning:
+                    "Token must match regular expression /[MN][A-Za-z\\d]{23}\\.[\\w-]{6}\\.[\\w-]{27}/"
             }
         ];
 
         prompt.start();
 
-        prompt.get(properties, function (err, result) {
-            if (err) { throw err }
-            client.login(result.token)
+        prompt.get(properties, function(err, result) {
+            if (err) {
+                throw err;
+            }
+            client.login(result.token);
         });
     } else {
         client.login(token);
     }
-})
+});
