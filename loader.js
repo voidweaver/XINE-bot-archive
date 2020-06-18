@@ -11,7 +11,6 @@ class Loader {
             if (json_string != "") {
                 this.data = JSON.parse(json_string);
             } else {
-                console.log("Empty file!");
                 this.data = undefined;
             }
         } else {
@@ -47,10 +46,7 @@ class Loader {
     }
 
     set(data) {
-        console.log(`data: ${JSON.stringify(data, null, 4)}`);
-        console.log(`this.data: ${JSON.stringify(this.data, null, 4)}`);
         if (this.data != data) {
-            console.log("data set");
             this.data = data;
             this.save();
         }
