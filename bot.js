@@ -134,6 +134,7 @@ client.on("message", msg => {
     var preferences_loader = new PreferencesLoader("./guild_preferences", id);
 
     var PREFS = preferences_loader.get();
+
     if (PREFS === undefined) {
         preferences_loader.make({
             info: {
@@ -462,9 +463,14 @@ client.on("message", msg => {
     }
 });
 
+client.on("channelDelete", channel => {
+    new PreferencesLoader("./guild_preferences", channel.id).wipe();
+});
+
 fs.readFile("./token", "utf-8", (err, data) => {
     let token;
     if (data) {
+        data = data.replace(/\r/g, "");
         let newline_location = data.search("\n");
         token = data.slice(
             0,

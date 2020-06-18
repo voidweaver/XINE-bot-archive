@@ -33,11 +33,13 @@ class Loader {
         this.data = JSON.parse(json_string);
     }
 
-    async save() {
-        await fs.writeFileSync(
+    save() {
+        fs.writeFile(
             this.path,
             Helper.sortedStringify(this.data, undefined, 4),
-            "utf-8",
+            {
+                encoding: "utf-8"
+            },
             err => {
                 if (err) throw err;
             }
@@ -77,6 +79,10 @@ module.exports = {
                 throw new Error("user_preferences.prefix must be specified");
             }
             super.make(data);
+        }
+
+        wipe() {
+            fs.unlink(this.path, _ => {}); // Delete the file if it exists
         }
     },
     ResourceLoader: class ResourceLoader extends Loader {
