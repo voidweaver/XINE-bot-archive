@@ -45,9 +45,29 @@ function checkForIP(ms) {
 }
 
 function parseArgs(raw, prefix) {
-    let tokens = raw.split(" ").filter(el => {
-        return el != "";
-    });
+    let quotes_count = (raw.match(/[\"]/g) || []).length;
+    let loner = quotes_count % 2 ? raw.lastIndexOf('"') : -1;
+
+    let tokens = [];
+    let withinQuotes = false;
+    let buffer = "";
+
+    for (let i = 0; i < raw.length; i++) {
+        let char = raw[i];
+        if (char == '"' && i != loner) {
+            withinQuotes = !withinQuotes;
+        } else if (!withinQuotes && char == " ") {
+            if (buffer != "") {
+                tokens.push(buffer);
+                buffer = "";
+            }
+        } else {
+            buffer += char;
+        }
+    }
+
+    if (buffer != "") tokens.push(buffer);
+
     if (tokens.length == 0) return [null];
 
     let command = tokens.shift();
@@ -56,7 +76,6 @@ function parseArgs(raw, prefix) {
     }
 
     let mentioned = false;
-
     let mention_test = new RegExp("<@!?" + client.user.id + ">");
 
     while (command && command.match(mention_test)) {
