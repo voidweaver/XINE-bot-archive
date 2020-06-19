@@ -413,9 +413,12 @@ client.on("message", msg => {
                             hacker: msg.author
                         };
                         msg.delete();
+                        let hacked_msg = msg.author.bot
+                            ? STR.display.hack.start
+                            : STR.display.hack.start_warn;
                         sendMsg(
                             msg.channel,
-                            STR.display.hack.start.format(msg.author),
+                            hacked_msg.format(msg.author),
                             false
                         ).then(msg_sent => {
                             setTimeout(_ => {

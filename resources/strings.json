@@ -65,7 +65,8 @@
                     "guild_title": "I cannot be hacked here :wink:",
                     "guild": "Hack failed: I don't have the permission to delete messages here"
                 },
-                "start": "I'm being hacked by {}!"
+                "start": "I'm being hacked by {}!",
+                "start_warn": "I'm being hacked by {0}! Warning: this might create an infinite loop as {0} is a bot"
             },
             "whoru": {
                 "glitch_personality": "~~X̴͚̔I̸͔̕N̷̛̘Ẹ̵̊~~ {}",
