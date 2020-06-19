@@ -482,11 +482,11 @@ fs.readFile("./token", "utf-8", (err, data) => {
         );
     }
 
-    let token_check = /[MN][A-Za-z\d]{23}\.[\w-]{6}\.[\w-]{27}/;
+    let token_check = /^[MN][A-Za-z\d]{23}\.[\w-]{6}\.[\w-]{27}$/;
 
     if (err || !token.match(token_check)) {
         console.log(
-            "Token does not match regular expression /[MN][A-Za-z\\d]{23}\\.[\\w-]{6}\\.[\\w-]{27}/, prompting for token"
+            "Token does not match regular expression /^[MN][A-Za-z\\d]{23}\\.[\\w-]{6}\\.[\\w-]{27}$/, prompting for token"
         );
 
         let prompt = require("prompt");
