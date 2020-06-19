@@ -158,9 +158,12 @@ client.on("message", msg => {
 
     let args = parseArgs(msg.content, PREFS.user_preferences.prefix);
 
+    const sleep = ms => new Promise(resolve => setTimeout(resolve, ms));
+
     async function on_kill(channel) {
         for (text of STR.display.hack.killed) {
             await sendMsg(channel, text);
+            await sleep(600);
         }
     }
 
