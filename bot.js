@@ -4,10 +4,10 @@ const fs = require("fs");
 
 format.extend(String.prototype, {});
 
-const {exec} = require("child_process");
+const { exec } = require("child_process");
 
 const Helper = require("./helper");
-const {SettingsLoader, PreferencesLoader, ResourceLoader} = require("./loader");
+const { SettingsLoader, PreferencesLoader, ResourceLoader } = require("./loader");
 var tasks = {};
 
 var ip_updater;
@@ -32,10 +32,7 @@ const updateIP = () => {
             if (err) {
                 console.error(STR.log.ip_error.format(err));
             } else {
-                public_ip =
-                    stdout.charAt(stdout.length - 1) == "\n"
-                        ? stdout.slice(0, -1)
-                        : stdout;
+                public_ip = stdout.charAt(stdout.length - 1) == "\n" ? stdout.slice(0, -1) : stdout;
             }
         }
     );
@@ -44,10 +41,7 @@ const updateIP = () => {
 function checkForIP(ms) {
     clearInterval(ip_updater);
     updateIP();
-    ip_updater = setInterval(
-        updateIP,
-        isNaN(ms) ? SETTINGS.defaults.ip_interval : ms
-    );
+    ip_updater = setInterval(updateIP, isNaN(ms) ? SETTINGS.defaults.ip_interval : ms);
 }
 
 function parseArgs(raw, prefix) {
@@ -100,9 +94,7 @@ function sendEmbed(channel, fields) {
     let embed = new Discord.MessageEmbed()
         .setColor(SETTINGS.colors[color])
         .setTitle(fields.title ? fields.title : STR.default.embed_title)
-        .setDescription(
-            fields.content ? fields.content : STR.default.embed_description
-        );
+        .setDescription(fields.content ? fields.content : STR.default.embed_description);
 
     if (fields.fields && typeof fields.fields[Symbol.iterator] === "function") {
         embed.addFields(...fields.fields);
@@ -143,9 +135,7 @@ client.on("message", msg => {
                 channel_name: channel_name
             },
             user_preferences: {
-                prefix: is_dm
-                    ? SETTINGS.defaults.dm_prefix
-                    : SETTINGS.defaults.prefix
+                prefix: is_dm ? SETTINGS.defaults.dm_prefix : SETTINGS.defaults.prefix
             }
         });
     } else {
@@ -240,11 +230,7 @@ client.on("message", msg => {
                 let json_str;
 
                 if (all) {
-                    json_str = Helper.sortedStringify(
-                        PREFS,
-                        undefined,
-                        SETTINGS.indent_size
-                    );
+                    json_str = Helper.sortedStringify(PREFS, undefined, SETTINGS.indent_size);
                 } else {
                     json_str = Helper.sortedStringify(
                         PREFS.user_preferences,
@@ -340,15 +326,10 @@ client.on("message", msg => {
                 if (args[1] in SETTINGS.aliases) {
                     let prefix = PREFS.user_preferences.prefix;
                     let alias_name = Helper.dCode(prefix + args[1]);
-                    let target = Helper.dCode(
-                        prefix + SETTINGS.aliases[args[1]]
-                    );
+                    let target = Helper.dCode(prefix + SETTINGS.aliases[args[1]]);
                     sendEmbed(msg.channel, {
                         title: STR.display.alias.get_title,
-                        content: STR.display.alias.get.format(
-                            alias_name,
-                            target
-                        )
+                        content: STR.display.alias.get.format(alias_name, target)
                     });
                 } else {
                     sendEmbed(msg.channel, {
@@ -363,10 +344,7 @@ client.on("message", msg => {
                 for (alias in SETTINGS.aliases) {
                     let alias_name = Helper.dCode(prefix + alias);
                     let target = Helper.dCode(prefix + SETTINGS.aliases[alias]);
-                    content += `${STR.display.alias.get.format(
-                        alias_name,
-                        target
-                    )}\n`;
+                    content += `${STR.display.alias.get.format(alias_name, target)}\n`;
                 }
                 sendEmbed(msg.channel, {
                     title: STR.display.alias.list_title,
@@ -378,21 +356,14 @@ client.on("message", msg => {
             {
                 let trimmed = msg.content.trim();
                 let prefix_end = PREFS.user_preferences.prefix.length;
-                let prefix_separator_count = countLeading(
-                    trimmed.substring(prefix_end)
-                );
+                let prefix_separator_count = countLeading(trimmed.substring(prefix_end));
                 let cmd_start = prefix_end + prefix_separator_count;
                 let cmd_end = cmd_start + args[0].length;
-                let msg_start =
-                    cmd_end + countLeading(msg.content.substring(cmd_end));
+                let msg_start = cmd_end + countLeading(msg.content.substring(cmd_end));
 
                 sendMsg(msg.channel, msg.content.substring(msg_start), false);
                 if (!PREFS.info.is_dm && msg.guild) {
-                    if (
-                        msg.guild.me.hasPermission(
-                            Discord.Permissions.FLAGS.MANAGE_MESSAGES
-                        )
-                    ) {
+                    if (msg.guild.me.hasPermission(Discord.Permissions.FLAGS.MANAGE_MESSAGES)) {
                         msg.delete();
                     }
                 }
@@ -407,11 +378,7 @@ client.on("message", msg => {
                 });
             } else {
                 if (msg.guild) {
-                    if (
-                        msg.guild.me.hasPermission(
-                            Discord.Permissions.FLAGS.MANAGE_MESSAGES
-                        )
-                    ) {
+                    if (msg.guild.me.hasPermission(Discord.Permissions.FLAGS.MANAGE_MESSAGES)) {
                         tasks[msg.channel.id] = {
                             _task_name: "hacked",
                             hacker: msg.author
@@ -420,15 +387,13 @@ client.on("message", msg => {
                         let hacked_msg = msg.author.bot
                             ? STR.display.hack.start_warn
                             : STR.display.hack.start;
-                        sendMsg(
-                            msg.channel,
-                            hacked_msg.format(msg.author),
-                            false
-                        ).then(msg_sent => {
-                            setTimeout(_ => {
-                                msg_sent.delete();
-                            }, 10000);
-                        });
+                        sendMsg(msg.channel, hacked_msg.format(msg.author), false).then(
+                            msg_sent => {
+                                setTimeout(_ => {
+                                    msg_sent.delete();
+                                }, 10000);
+                            }
+                        );
                     } else {
                         sendEmbed(msg.channel, {
                             title: STR.display.hack.failed.guild_title,
@@ -445,16 +410,10 @@ client.on("message", msg => {
                 if (msg.channel.id in tasks) {
                     let task = tasks[msg.channel.id];
                     if (task._task_name == "hacked") {
-                        personality = STR.display.whoru.glitch_personality.format(
-                            task.hacker
-                        );
+                        personality = STR.display.whoru.glitch_personality.format(task.hacker);
                     }
                 }
-                sendMsg(
-                    msg.channel,
-                    STR.display.whoru.response.format(personality),
-                    false
-                );
+                sendMsg(msg.channel, STR.display.whoru.response.format(personality), false);
             }
             break;
         default:
@@ -479,10 +438,7 @@ fs.readFile("./token", "utf-8", (err, data) => {
     if (data) {
         data = data.replace(/\r/g, "");
         let newline_location = data.search("\n");
-        token = data.slice(
-            0,
-            newline_location != -1 ? newline_location : undefined
-        );
+        token = data.slice(0, newline_location != -1 ? newline_location : undefined);
     }
 
     let token_check = /^[MN][A-Za-z\d]{23}\.[\w-]{6}\.[\w-]{27}$/;

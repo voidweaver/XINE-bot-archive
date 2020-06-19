@@ -58,19 +58,14 @@ module.exports = {
     SettingsLoader: class SettingsLoader extends Loader {},
     PreferencesLoader: class PreferencesLoader extends Loader {
         constructor(folder_path, channel_id) {
-            let file_path = path.join(
-                __dirname,
-                folder_path,
-                channel_id + ".json"
-            );
+            let file_path = path.join(__dirname, folder_path, channel_id + ".json");
             super(file_path);
         }
 
         make(data) {
             if (
                 !data.user_preferences ||
-                (!data.user_preferences.prefix &&
-                    data.user_preferences.prefix != "")
+                (!data.user_preferences.prefix && data.user_preferences.prefix != "")
             ) {
                 throw new Error("user_preferences.prefix must be specified");
             }
