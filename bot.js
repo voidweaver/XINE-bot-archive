@@ -173,6 +173,7 @@ client.on("message", msg => {
                         case "kill":
                         case "terminate":
                         case "stop":
+                        case "exit":
                         case "logout":
                             delete tasks[msg.channel.id];
                             on_kill(msg.channel);
@@ -414,8 +415,8 @@ client.on("message", msg => {
                         };
                         msg.delete();
                         let hacked_msg = msg.author.bot
-                            ? STR.display.hack.start
-                            : STR.display.hack.start_warn;
+                            ? STR.display.hack.start_warn
+                            : STR.display.hack.start;
                         sendMsg(
                             msg.channel,
                             hacked_msg.format(msg.author),
