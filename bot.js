@@ -1,6 +1,7 @@
 const Discord = require("discord.js");
 const format = require("string-format");
 const fs = require("fs");
+const path = require("path");
 
 format.extend(String.prototype, {});
 
@@ -13,10 +14,12 @@ var tasks = {};
 var ip_updater;
 
 var public_ip;
+
 const settings_loader = new SettingsLoader("./settings.json");
-var SETTINGS = settings_loader.get();
+var SETTINGS;
+
 const str_loader = new ResourceLoader("./resources/strings.json");
-var STR = str_loader.get()["en"];
+var STR;
 
 const client = new Discord.Client();
 
@@ -134,20 +137,25 @@ function sendMsg(channel, msg, escape = true) {
     return channel.send(msg);
 }
 
-client.on("message", msg => {
+client.on("message", async msg => {
     if (msg.author == client.user) return;
 
-    let id = msg.channel.id;
     let is_dm = msg.guild === null ? 1 : 0;
-    let guild_name = is_dm ? null : msg.channel.guild.name;
+
+    let channel_id = msg.channel.id;
     let channel_name = is_dm ? msg.author.tag : msg.channel.name;
 
-    var preferences_loader = new PreferencesLoader("./guild_preferences", id);
+    let guild_id = is_dm ? null : msg.guild.id;
+    let guild_name = is_dm ? null : msg.channel.guild.name;
+
+    var preferences_loader = new PreferencesLoader("./guild_preferences", guild_id, channel_id);
+    await preferences_loader.init();
 
     var PREFS = preferences_loader.get();
+    var undefed = false;
 
     if (PREFS === undefined) {
-        preferences_loader.make({
+        PREFS = {
             info: {
                 is_dm: is_dm,
                 guild_name: guild_name,
@@ -156,16 +164,22 @@ client.on("message", msg => {
             user_preferences: {
                 prefix: is_dm ? SETTINGS.defaults.dm_prefix : SETTINGS.defaults.prefix
             }
-        });
+        };
+        undefed = true;
     } else {
         PREFS.info.guild_name = guild_name;
         PREFS.info.channel_name = channel_name;
         preferences_loader.save();
+
+        PREFS = preferences_loader.get();
     }
 
-    PREFS = preferences_loader.get();
-
     let args = parseArgs(msg.content, PREFS.user_preferences.prefix);
+
+    if (!args[0]) return;
+    else if (undefed) {
+        preferences_loader.make(PREFS);
+    }
 
     const sleep = ms => new Promise(resolve => setTimeout(resolve, ms));
 
@@ -180,34 +194,29 @@ client.on("message", msg => {
         let task = tasks[msg.channel.id];
         switch (task._task_name) {
             case "hacked":
-                if (msg.author.id == task.hacker.id) {
-                    switch (args[0]) {
-                        case "kill":
-                        case "terminate":
-                        case "stop":
-                        case "exit":
-                        case "logout":
-                            delete tasks[msg.channel.id];
-                            on_kill(msg.channel);
-                            return;
-                        default:
-                            sendMsg(msg.channel, msg.content, false);
-                            if (
-                                msg.guild &&
-                                msg.guild.me.hasPermission(
-                                    Discord.Permissions.FLAGS.MANAGE_MESSAGES
-                                )
-                            ) {
-                                msg.delete();
-                            }
-                            return;
-                    }
+                if (msg.author.id != task.hacker.id) return;
+                switch (args[0]) {
+                    case "kill":
+                    case "terminate":
+                    case "stop":
+                    case "exit":
+                    case "logout":
+                        delete tasks[msg.channel.id];
+                        on_kill(msg.channel);
+                        return;
+                    default:
+                        sendMsg(msg.channel, msg.content, false);
+                        if (
+                            msg.guild &&
+                            msg.guild.me.hasPermission(Discord.Permissions.FLAGS.MANAGE_MESSAGES)
+                        ) {
+                            msg.delete();
+                        }
+                        return;
                 }
                 break;
         }
     }
-
-    if (!args[0]) return;
 
     switch (args[0]) {
         case "ip":
@@ -233,7 +242,7 @@ client.on("message", msg => {
         case "id":
             sendEmbed(msg.channel, {
                 title: STR.display.debug.title,
-                content: STR.display.debug.id.format(Helper.dCode(id))
+                content: STR.display.debug.id.format(Helper.dCode(channel_id))
             });
             break;
         case "preferences":
@@ -449,7 +458,18 @@ client.on("message", msg => {
 });
 
 client.on("channelDelete", channel => {
-    new PreferencesLoader("./guild_preferences", channel.id).wipe();
+    let guild_id = channel.guild ? channel.guild.id : null;
+    new PreferencesLoader("./guild_preferences", guild_id, channel.id).wipe();
+});
+
+client.on("guildDelete", guild => {
+    let prefs_path;
+    fs.readdir(path.join("./guild_preferences", guild.id), (err, files) => {
+        files.forEach(file => {
+            let id = path.parse(file).name;
+            new PreferencesLoader("./guild_preferences", guild.id, id).wipe();
+        });
+    });
 });
 
 fs.readFile("./token", "utf-8", (err, data) => {
@@ -488,6 +508,11 @@ fs.readFile("./token", "utf-8", (err, data) => {
             client.login(result.token);
         });
     } else {
-        client.login(token);
+        Promise.all([settings_loader.init(), str_loader.init()]).then(() => {
+            SETTINGS = settings_loader.get();
+            STR = str_loader.get()["en"];
+
+            client.login(token);
+        });
     }
 });
