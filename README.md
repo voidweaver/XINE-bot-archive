@@ -17,3 +17,6 @@ This is a bot I made. There is not much feature packed in here. I just made it t
    ```shell
    $ npm start
    ```
+
+# Todo list
+- [ ] use a database for storing data instead of files in a folder
