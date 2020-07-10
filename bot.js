@@ -176,10 +176,7 @@ client.on("message", async msg => {
 
     let args = parseArgs(msg.content, PREFS.user_preferences.prefix);
 
-    if (!args[0]) return;
-    else if (undefed) {
-        preferences_loader.make(PREFS);
-    }
+    if (undefed && args[0]) preferences_loader.make(PREFS);
 
     const sleep = ms => new Promise(resolve => setTimeout(resolve, ms));
 
@@ -194,7 +191,7 @@ client.on("message", async msg => {
         let task = tasks[msg.channel.id];
         switch (task._task_name) {
             case "hacked":
-                if (msg.author.id != task.hacker.id) return;
+                if (msg.author.id != task.hacker.id) break;
                 switch (args[0]) {
                     case "kill":
                     case "terminate":
@@ -204,19 +201,20 @@ client.on("message", async msg => {
                         delete tasks[msg.channel.id];
                         on_kill(msg.channel);
                         return;
-                    default:
-                        sendMsg(msg.channel, msg.content, false);
-                        if (
-                            msg.guild &&
-                            msg.guild.me.hasPermission(Discord.Permissions.FLAGS.MANAGE_MESSAGES)
-                        ) {
-                            msg.delete();
-                        }
-                        return;
                 }
-                break;
+
+                sendMsg(msg.channel, msg.content, false);
+                if (
+                    msg.guild &&
+                    msg.guild.me.hasPermission(Discord.Permissions.FLAGS.MANAGE_MESSAGES)
+                ) {
+                    msg.delete();
+                }
+                return;
         }
     }
+
+    if (!args[0]) return;
 
     switch (args[0]) {
         case "ip":
