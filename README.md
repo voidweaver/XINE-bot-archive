@@ -9,9 +9,9 @@ This is a bot I made. There is not much feature packed in here. I just made it t
    ```shell
    $ git clone https://github.com/voidweaver/XINE-bot.git
    ```
-2. Install the packages
+2. Install dependencies
    ```shell
-   $ npm i
+   $ npm i --prod
    ```
 3. Run the bot!
    ```shell
